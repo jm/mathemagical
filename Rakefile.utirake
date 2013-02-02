@@ -1,0 +1,392 @@
+# Utility for Rake
+#
+# Copyright (C) 2008, KURODA Hiraku <hiraku@hinet.mydns.jp>
+# You can redistribute it and/or modify it under GPL3.
+
+require "rake/clean"
+require "rake/testtask"
+require "rake/contrib/rubyforgepublisher"
+require "rubygems/package_task"
+
+if File.exist?("Gemfile")
+	begin
+		require "bundler"
+		Bundler.setup
+	rescue LoadError
+		if $!.message =~ / bundler\z/
+			warn "Warning: Bundler is not found."
+		else
+			raise
+		end
+	end
+end
+
+class UtiRake
+	include Rake::DSL
+
+	def self.setup(opt={}, &proc)
+		ur = new
+		ur.setup(opt, &proc)
+	rescue
+		puts $!.class, $!.message, $!.backtrace
+	end
+
+	attr_reader :opt, :spec_proc, :cucumber_proc, :rdoc_proc, :gemspec_proc, :package_proc, :rcov_spec_proc
+
+	def setup(opt={}, &proc)
+		@opt = opt
+		directory "external"
+		CLEAN << "coverage" << "coverage.spec" << "coverage.cuke" << "doc"
+		CLOBBER << "external"
+
+		instance_eval(&proc) if proc
+
+		if need_spec?
+			begin
+				@rspec2_flg = false
+				require "rspec/core/rake_task"
+				@rspec2_flg = true
+			rescue LoadError
+				require "spec/rake/spectask"
+			end
+			define_spec_task
+		end
+
+		if need_cucumber?
+			require "cucumber/rake/task"
+			define_cucumber_task
+		end
+
+		define_rdoc_task
+		define_rcov_task
+		define_package_task
+		define_here_dependency
+		define_alias_task if @alias_task
+	end
+
+	def rspec2?; @rspec2_flg; end
+
+	def spec_task
+		rspec2? ? RSpec::Core::RakeTask : Spec::Rake::SpecTask
+	end
+
+	def need_spec?
+		File.directory?("spec")
+	end
+
+	def need_cucumber?
+		File.directory?("features")
+	end
+
+	def spec(&proc)
+		@spec_proc = proc
+	end
+
+	def cucumber(&proc)
+		@cucumber_proc = proc
+	end
+
+	def rdoc(&proc)
+		@rdoc_proc = proc
+	end
+
+	def gemspec(&proc)
+		@gemspec_proc = proc
+	end
+
+	def rcov_spec(&proc)
+		@rcov_spec_proc = proc
+	end
+
+	def package(&proc)
+		@package_proc = proc
+	end
+
+	def no_here(task)
+		@no_here_task = task
+	end
+
+	def no_here_task
+		@no_here_task || "spec:lump"
+	end
+
+	def alias_task
+		@alias_task = true
+	end
+
+	def hg(cmd)
+		sh "hg #{cmd.to_s}"
+	end
+
+	def external(base_url, *libs)
+		libs = libs.first if libs.first.is_a?(Array)
+		namespace :external do
+			directory "external/lib"
+			libs.each do |lib|
+				libdir = "external/#{lib}"
+				file libdir => "external/lib" do
+					if File.exist?("../#{lib}")
+						Dir.chdir("external") do
+							ln_s "../../#{lib}", "./", :force=>true
+						end
+					end
+					hg "clone #{File.join(base_url, lib)} #{libdir}" unless File.exist?(libdir)
+					Dir["#{libdir}/lib/*"].each do |f|
+						base = File.basename(f)
+						cd "external/lib" do
+							ln_s "../#{lib}/lib/#{base}", "./"
+						end
+					end
+				end
+
+				if File.exist?(libdir)
+					Dir["#{libdir}/lib/*"].each do |f|
+						base = File.basename(f)
+						file "external/lib/#{base}" => "external/lib" do
+							cd "external/lib" do
+								ln_s "../#{lib}/lib/#{base}", "./"
+							end
+						end
+						task :setup => "external/lib/#{base}"
+					end
+				end
+
+				desc "Setup external libraries"
+				task :setup=>libdir
+			end
+
+			task :rake => :setup do
+				libs.each do |lib|
+					Dir.chdir "external/#{lib}" do
+						sh "rake"
+					end
+				end
+			end
+		end
+		@external = true
+	end
+
+	def external?; @external; end
+
+	def define_rdoc_task
+		begin
+			require "rdoc/task"
+		rescue LoadError
+			return
+		end
+
+		Rake::RDocTask.new(:rdoc) do |rdoc|
+			rdoc.options << "-S"
+			rdoc.options << "-w" << "3"
+			rdoc.options << "-c" << "UTF-8"
+			rdoc.rdoc_files.include("lib/**/*.rb")
+			rdoc_proc.call(rdoc) if rdoc_proc
+		end
+		task :doc do
+			remove_entry_secure "doc" if File.directory?("doc")
+			sh "rdoc -S -w 3 -c UTF-8 -d -x external"
+		end
+	end
+
+	def define_package_task
+		spec = Gem::Specification.new do |s|
+			s.platform = Gem::Platform::RUBY
+			s.files = FileList["Rakefile*", "lib/**/*", "spec/**/*"]
+			s.version = "0.0.0.noversion"
+			gemspec_proc.call(s) if gemspec_proc
+		end
+
+		gem = Gem::PackageTask.new(spec) do |t|
+			t.need_tar_gz = true
+			package_proc.call(t) if package_proc
+		end
+
+		task "utirake:copy_for_package" do
+			mv "Rakefile.utirake", "Rakefile.utirake_#{$$}"
+			cp "external/utirake/utirake.rb", "Rakefile.utirake"
+		end
+
+		file gem.package_dir_path => "utirake:copy_for_package"
+
+		task :gem do
+			rm "Rakefile.utirake"
+			mv "Rakefile.utirake_#{$$}", "Rakefile.utirake"
+		end
+	end
+
+	def publish(project_name, user_id)
+		task :publish => "rdoc" do
+			yield if block_given?
+			Rake::RubyForgePublisher.new(project_name, user_id).upload
+		end
+	end
+
+	FILE_SORT = lambda{|a, b| File.mtime(a)<=>File.mtime(b)}
+
+	def spec_files
+		@spec_files ||= FileList["./spec/**/*_spec.rb"].sort(&FILE_SORT).reverse
+	end
+
+	def set_spec_opts(spec)
+		spec.verbose = false
+		if rspec2?
+			spec.rspec_opts ||= []
+			spec.rspec_opts << "-c"
+			spec.rspec_opts << "-I" << "." << "-I" << "./lib" << "-I" << "./external/lib"
+		else
+			spec.spec_opts << "-c"
+			spec.libs << "." << "./lib" << "./external/lib"
+		end
+	end
+
+	def define_spec_task
+		task :spec => "spec:apart"
+		namespace :spec do
+			spec_files.each do |f|
+				desc ""
+				spec_task.new(:apart) do |s|
+					if rspec2?
+						s.pattern = f
+					else
+						s.spec_files = FileList[f]
+					end
+					set_spec_opts(s)
+					spec_proc.call(s) if spec_proc
+				end
+			end
+			task(:apart).comment = "Run all specs separately"
+
+			desc "Run all specs in a lump"
+			spec_task.new(:lump) do |s|
+				s.spec_files = spec_files unless rspec2?
+				set_spec_opts(s)
+				spec_proc.call(s) if spec_proc
+			end
+
+			desc "Run all specs to profile"
+			spec_task.new(:profile) do |s|
+				set_spec_opts(s)
+				if rspec2?
+					s.rspec_opts << "-p"
+				else
+					s.spec_opts << "-f" << "profile"
+				end
+			end
+
+			`grep -sRn '#[[:space:]]*here\\([[:space:]]\\|$\\)' --include='*.rb' spec`.split(/\n/).map{|l|
+				next nil unless l=~/\A(.*?):(\d+):/
+				[$1, $2.to_i]
+			}.compact.sort{|a, b| FILE_SORT.call(a[0], b[0])}.reverse.each do |file, line|
+				desc ""
+				spec_task.new(:here) do |s|
+					set_spec_opts(s)
+					if rspec2?
+						s.pattern = file
+						s.rspec_opts << "-l#{line}"
+					else
+						s.spec_files = [file]
+						s.spec_opts << "-l#{line}"
+					end
+					spec_proc.call(s) if spec_proc
+				end
+			end
+			task :no_here => no_here_task
+		end
+	end
+
+	def set_cucumber_opts(task)
+		task.libs << "."
+		cucumber_proc.call(task) if cucumber_proc
+	end
+
+	def define_cucumber_task
+		Cucumber::Rake::Task.new do |t|
+			set_cucumber_opts(t)
+		end
+
+		unless `grep -sRn '^[[:space:]]*@here$' features`.empty?
+			Cucumber::Rake::Task.new("cucumber:here") do |t|
+				t.cucumber_opts = %w[--tags @here]
+				set_cucumber_opts(t)
+			end
+		end
+		task "cucumber:no_here" => :cucumber
+	end
+
+	def define_here_dependency
+		unless Rake::Task.task_defined?("spec:here") || Rake::Task.task_defined?("cucumber:here")
+			task "spec:here" => "spec:no_here" if need_spec? && !Rake::Task.task_defined?("spec:here")
+			task "cucumber:here" => "cucumber:no_here" if need_cucumber? && !Rake::Task.task_defined?("cucumber:here")
+		end
+
+		task("spec:here").comment = "Run spec only marked '# here'"
+		task("cucumber:here").comment = "only tagged '@here'"
+	end
+
+	def rcov_opts(t, aggregation)
+		t.rcov_opts ||= []
+		t.rcov_opts << "-I" << "./spec:./lib:./external/lib"
+		t.rcov_opts << "--exclude" << "gems\/,features\/,external\/"
+		t.rcov_opts << "--aggregate" << "coverage.data" if aggregation
+		t.rcov = true
+	end
+
+	def define_rcov_each_task(aggregation)
+		if need_spec?
+			spec_task.new do |t|
+				t.verbose = false
+				rcov_opts(t, aggregation)
+				if rspec2?
+					t.rcov_opts << "-o" << "coverage.spec" unless aggregation
+				else
+					set_spec_opts(t)
+					t.spec_files = spec_files
+					t.rcov_dir = "coverage.spec" unless aggregation
+				end
+				rcov_spec_proc.call(t) if rcov_spec_proc
+			end
+		else
+			task "spec"
+		end
+
+		if need_cucumber?
+			Cucumber::Rake::Task.new do |t|
+				set_cucumber_opts(t)
+				rcov_opts(t, aggregation)
+				t.rcov_opts << "-o" << "coverage.cuke" unless aggregation
+			end
+		else
+			task "cucumber"
+		end
+	end
+
+	def define_rcov_task
+		namespace :rcov do
+			define_rcov_each_task(false)
+		end
+
+		desc "Run specs and Cucumber using RCov"
+		task "rcov:lump" do
+			rm "coverage.data" if File.exist?("coverage.data")
+			ns = namespace do
+				define_rcov_each_task(true)
+			end
+			ns.tasks.each do |t|
+				t.invoke
+			end
+			rm "coverage.data"
+		end
+
+		task "rcov:all" => %w[rcov:spec rcov:cucumber rcov:lump]
+	end
+
+	def define_alias_task
+		if Rake::Task.task_defined?("spec:apart")
+			task :apart => "spec:apart"
+			task :lump => "spec:lump"
+			task :here => "spec:here"
+			task :profile => "spec:profile"
+		end
+		task :here => "cucumber:here" if Rake::Task.task_defined?("cucumber:here")
+	end
+end
