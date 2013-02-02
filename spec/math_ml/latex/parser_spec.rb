@@ -1,13 +1,13 @@
 # coding: utf-8
 require "eim_xml/parser"
 require "eim_xml/dsl"
-require "math_ml"
+require "mathemagical"
 require "spec/util"
-require "math_ml/symbol/character_reference"
-require "math_ml/symbol/utf8"
+require "mathemagical/symbol/character_reference"
+require "mathemagical/symbol/utf8"
 
-describe MathML::LaTeX::Parser do
-	include MathML::Spec::Util
+describe Mathemagical::LaTeX::Parser do
+	include Mathemagical::Spec::Util
 
 	def check_chr(tag, src)
 		src.scan(/./) do |c|
@@ -120,13 +120,13 @@ describe MathML::LaTeX::Parser do
 			end
 
 			it "utf8" do
-				@parser = MathML::LaTeX::Parser.new(:symbol=>MathML::Symbol::UTF8)
+				@parser = Mathemagical::LaTeX::Parser.new(:symbol=>Mathemagical::Symbol::UTF8)
 				smml("a'").should == "<msup><mi>a</mi><mo>′</mo></msup>"
 				smml("a'''").should == "<msup><mi>a</mi><mo>′′′</mo></msup>"
 			end
 
 			it "character reference" do
-				@parser = MathML::LaTeX::Parser.new(:symbol=>MathML::Symbol::CharacterReference)
+				@parser = Mathemagical::LaTeX::Parser.new(:symbol=>Mathemagical::Symbol::CharacterReference)
 				smml("a'").should == "<msup><mi>a</mi><mo>&#x2032;</mo></msup>"
 				smml("a'''").should == "<msup><mi>a</mi><mo>&#x2032;&#x2032;&#x2032;</mo></msup>"
 			end
@@ -492,7 +492,7 @@ EOS
 
 	context ".new should accept symbol table" do
 		it "character reference" do
-			@parser = MathML::LaTeX::Parser.new(:symbol=>MathML::Symbol::CharacterReference)
+			@parser = Mathemagical::LaTeX::Parser.new(:symbol=>Mathemagical::Symbol::CharacterReference)
 			smml('\alpha').should == "<mi>&#x3b1;</mi>"
 			smml('\mathbb{abcABC}').should == "<mrow><mrow><mi>&#x1d552;</mi><mi>&#x1d553;</mi><mi>&#x1d554;</mi><mi>&#x1d538;</mi><mi>&#x1d539;</mi><mi>&#x2102;</mi></mrow></mrow>"
 			smml('\mathscr{abcABC}').should == "<mrow><mrow><mi>&#x1d4b6;</mi><mi>&#x1d4b7;</mi><mi>&#x1d4b8;</mi><mi>&#x1d49c;</mi><mi>&#x212c;</mi><mi>&#x1d49e;</mi></mrow></mrow>"
@@ -500,7 +500,7 @@ EOS
 		end
 
 		it "utf8" do
-			@parser = MathML::LaTeX::Parser.new(:symbol=>MathML::Symbol::UTF8)
+			@parser = Mathemagical::LaTeX::Parser.new(:symbol=>Mathemagical::Symbol::UTF8)
 			smml('\alpha').should == "<mi>α</mi>"
 			smml('\mathbb{abcABC}').should == "<mrow><mrow><mi>𝕒</mi><mi>𝕓</mi><mi>𝕔</mi><mi>𝔸</mi><mi>𝔹</mi><mi>ℂ</mi></mrow></mrow>"
 			smml('\mathscr{abcABC}').should == "<mrow><mrow><mi>𝒶</mi><mi>𝒷</mi><mi>𝒸</mi><mi>𝒜</mi><mi>ℬ</mi><mi>𝒞</mi></mrow></mrow>"
@@ -510,8 +510,8 @@ EOS
 
 	context "#symbol_table" do
 		it "should return when .new was given name of symbol-module" do
-			ps = MathML::LaTeX::Parser
-			symbol = MathML::Symbol
+			ps = Mathemagical::LaTeX::Parser
+			symbol = Mathemagical::Symbol
 
 			ps.new(:symbol=>symbol::UTF8).symbol_table.should == symbol::UTF8
 			ps.new(:symbol=>symbol::EntityReference).symbol_table.should == symbol::EntityReference
@@ -528,45 +528,45 @@ EOS
 		context "should return default symbol module" do
 			before do
 				@loaded_features = $LOADED_FEATURES.dup
-				$LOADED_FEATURES.delete_if{|i| i=~/math_ml/}
-				if ::Object.const_defined?(:MathML)
-					@MathML = ::Object.const_get(:MathML)
-					::Object.module_eval{remove_const(:MathML)}
+				$LOADED_FEATURES.delete_if{|i| i=~/mathemagical/}
+				if ::Object.const_defined?(:Mathemagical)
+					@Mathemagical = ::Object.const_get(:Mathemagical)
+					::Object.module_eval{remove_const(:Mathemagical)}
 				end
 			end
 
 			after do
 				$LOADED_FEATURES.clear
 				$LOADED_FEATURES.push(@loaded_features.shift) until @loaded_features.empty?
-				if @MathML
-					::Object.module_eval{remove_const(:MathML)}
-					::Object.const_set(:MathML, @MathML)
+				if @Mathemagical
+					::Object.module_eval{remove_const(:Mathemagical)}
+					::Object.const_set(:Mathemagical, @Mathemagical)
 				end
 			end
 
 			it "character entity reference version by default" do
-				require("math_ml").should be_true
-				MathML::LaTeX::Parser.new.symbol_table.should == MathML::Symbol::EntityReference
+				require("mathemagical").should be_true
+				Mathemagical::LaTeX::Parser.new.symbol_table.should == Mathemagical::Symbol::EntityReference
 			end
 
 			describe "character entity reference version when set by requiring" do
 				it do
-					require("math_ml/symbol/entity_reference").should be_true
-					MathML::LaTeX::Parser.new.symbol_table.should == MathML::Symbol::EntityReference
+					require("mathemagical/symbol/entity_reference").should be_true
+					Mathemagical::LaTeX::Parser.new.symbol_table.should == Mathemagical::Symbol::EntityReference
 				end
 			end
 
 			describe "utf8 version when set by requiring" do
 				it do
-					require("math_ml/symbol/utf8").should be_true
-					MathML::LaTeX::Parser.new.symbol_table.should == MathML::Symbol::UTF8
+					require("mathemagical/symbol/utf8").should be_true
+					Mathemagical::LaTeX::Parser.new.symbol_table.should == Mathemagical::Symbol::UTF8
 				end
 			end
 
 			describe "numeric character reference version when set by requiring" do
 				it do
-					require("math_ml/symbol/character_reference").should be_true
-					MathML::LaTeX::Parser.new.symbol_table.should == MathML::Symbol::CharacterReference
+					require("mathemagical/symbol/character_reference").should be_true
+					Mathemagical::LaTeX::Parser.new.symbol_table.should == Mathemagical::Symbol::CharacterReference
 				end
 			end
 		end

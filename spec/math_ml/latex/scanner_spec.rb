@@ -1,8 +1,8 @@
-require "math_ml"
+require "mathemagical"
 
-describe MathML::LaTeX::Scanner do
+describe Mathemagical::LaTeX::Scanner do
 	def new_scanner(src)
-		MathML::LaTeX::Scanner.new(src)
+		Mathemagical::LaTeX::Scanner.new(src)
 	end
 
 	it "#done, #rest" do
@@ -116,7 +116,7 @@ describe MathML::LaTeX::Scanner do
 		new_scanner(" ").check_block.should == nil
 
 		s = new_scanner("{test")
-		lambda{s.scan_block}.should raise_error(MathML::LaTeX::BlockNotClosed)
+		lambda{s.scan_block}.should raise_error(Mathemagical::LaTeX::BlockNotClosed)
 	end
 
 	it "#scan_any" do
@@ -175,7 +175,7 @@ describe MathML::LaTeX::Scanner do
 		s.scan_option.should == "[{[]}]"
 		s[1].should == "{[]}"
 
-		lambda{new_scanner("[").scan_option}.should raise_error(MathML::LaTeX::OptionNotClosed)
+		lambda{new_scanner("[").scan_option}.should raise_error(Mathemagical::LaTeX::OptionNotClosed)
 	end
 
 	it "#check_option" do
@@ -197,6 +197,6 @@ describe MathML::LaTeX::Scanner do
 		s.check_option.should == "[{[]}]"
 		s[1].should == "{[]}"
 
-		lambda{new_scanner("[").check_option}.should raise_error(MathML::LaTeX::OptionNotClosed)
+		lambda{new_scanner("[").check_option}.should raise_error(Mathemagical::LaTeX::OptionNotClosed)
 	end
 end

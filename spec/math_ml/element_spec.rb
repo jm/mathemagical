@@ -1,17 +1,17 @@
-require "math_ml"
+require "mathemagical"
 
-describe MathML::Element do
+describe Mathemagical::Element do
 	it "#display_style and #as_display_style" do
-		MathML::Element.new("test").display_style.should == nil
-		e = MathML::Element.new("test")
+		Mathemagical::Element.new("test").display_style.should == nil
+		e = Mathemagical::Element.new("test")
 		r = e.as_display_style
 		r.should equal(e)
 		e.display_style.should be_true
 	end
 
 	it "#pop" do
-		e = MathML::Element.new("super")
-		s = MathML::Element.new("sub")
+		e = Mathemagical::Element.new("super")
+		s = Mathemagical::Element.new("sub")
 
 		e.pop.should be_nil
 
@@ -25,7 +25,7 @@ describe MathML::Element do
 	end
 
 	it "#to_s" do
-		e = MathML::Element.new("e")
+		e = Mathemagical::Element.new("e")
 		e << "test<"
 		e.to_s.should == "<e>test&lt;</e>"
 	end

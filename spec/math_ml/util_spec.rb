@@ -1,7 +1,7 @@
-require "math_ml/util"
+require "mathemagical/util"
 
-describe MathML::Util do
-	include MathML::Util
+describe Mathemagical::Util do
+	include Mathemagical::Util
 
 	it "#escapeXML" do
 		escapeXML("<>&\"'").should == "&lt;&gt;&amp;&quot;&apos;"
@@ -10,9 +10,9 @@ describe MathML::Util do
 	end
 
 	it ".escapeXML" do
-		MathML::Util.escapeXML("<>&\"'").should == "&lt;&gt;&amp;&quot;&apos;"
-		MathML::Util.escapeXML("\n").should == "\n"
-		MathML::Util.escapeXML("\n", true).should == "<br />\n"
+		Mathemagical::Util.escapeXML("<>&\"'").should == "&lt;&gt;&amp;&quot;&apos;"
+		Mathemagical::Util.escapeXML("\n").should == "\n"
+		Mathemagical::Util.escapeXML("\n", true).should == "<br />\n"
 	end
 
 	it "#collect_regexp" do
@@ -23,24 +23,24 @@ describe MathML::Util do
 	end
 
 	it ".collect_regexp" do
-		MathML::Util.collect_regexp([/a/, /b/, /c/]).should == /#{/a/}|#{/b/}|#{/c/}/
-		MathML::Util.collect_regexp([[/a/, /b/, /c/]]).should == /#{/a/}|#{/b/}|#{/c/}/
-		MathML::Util.collect_regexp([]).should == /(?!)/
-		MathML::Util.collect_regexp(/a/).should == /#{/a/}/
+		Mathemagical::Util.collect_regexp([/a/, /b/, /c/]).should == /#{/a/}|#{/b/}|#{/c/}/
+		Mathemagical::Util.collect_regexp([[/a/, /b/, /c/]]).should == /#{/a/}|#{/b/}|#{/c/}/
+		Mathemagical::Util.collect_regexp([]).should == /(?!)/
+		Mathemagical::Util.collect_regexp(/a/).should == /#{/a/}/
 
-		MathML::Util.collect_regexp([nil, /a/, "text", /b/]).should == /#{/a/}|#{/b/}/
+		Mathemagical::Util.collect_regexp([nil, /a/, "text", /b/]).should == /#{/a/}|#{/b/}/
 
-		MathML::Util.collect_regexp([nil, [/a/, [/b/, /c/]]]).should == /#{/a/}|#{/b/}|#{/c/}/
+		Mathemagical::Util.collect_regexp([nil, [/a/, [/b/, /c/]]]).should == /#{/a/}|#{/b/}|#{/c/}/
 	end
 
 	it "::INVALID_RE" do
-		MathML::Util::INVALID_RE.should == /(?!)/
+		Mathemagical::Util::INVALID_RE.should == /(?!)/
 	end
 end
 
-describe MathML::Util::MathData do
+describe Mathemagical::Util::MathData do
 	it "#<< and #update" do
-		m = MathML::Util::MathData.new
+		m = Mathemagical::Util::MathData.new
 		m.math_list << "ml1"
 		m.msrc_list << "sl1"
 		m.dmath_list << "dml1"
@@ -58,7 +58,7 @@ describe MathML::Util::MathData do
 		m.user_list.should == ["ul1"]
 		m.usrc_list.should == ["usl1"]
 
-		m2 = MathML::Util::MathData.new
+		m2 = Mathemagical::Util::MathData.new
 		m2.math_list << "ml2"
 		m2.msrc_list << "sl2"
 		m2.dmath_list << "dml2"
@@ -81,7 +81,7 @@ describe MathML::Util::MathData do
 	end
 end
 
-describe MathML::Util::SimpleLaTeX do
+describe Mathemagical::Util::SimpleLaTeX do
 	def strip_math(s)
 		s.gsub(/>\s*/, ">").gsub(/\s*</, "<")[/<math.*?>(.*)<\/math>/m, 1]
 	end
@@ -108,7 +108,7 @@ describe MathML::Util::SimpleLaTeX do
 			expected_dmath, expected_dsrc,
 			expected_escaped, expected_esrc,
 			expected_encoded, expected_decoded,
-			simple_latex = MathML::Util::SimpleLaTeX)
+			simple_latex = Mathemagical::Util::SimpleLaTeX)
 		encoded, data = simple_latex.encode(src)
 
 		data.math_list.each do |i|
@@ -177,49 +177,49 @@ describe MathML::Util::SimpleLaTeX do
 	end
 
 	it "should accept through_list option" do
-		s = MathML::Util::SimpleLaTeX.new(:through_list=>[/\{\{.*\}\}/, /\(.*\)/])
+		s = Mathemagical::Util::SimpleLaTeX.new(:through_list=>[/\{\{.*\}\}/, /\(.*\)/])
 		assert_data("{{$a$}}($b$)", [], [], [], [], [], [], "{{$a$}}($b$)", "{{$a$}}($b$)", s)
 
-		s = MathML::Util::SimpleLaTeX.new(:through_list=>/\{.*\}/)
+		s = Mathemagical::Util::SimpleLaTeX.new(:through_list=>/\{.*\}/)
 		assert_data("{$a$}", [], [], [], [], [], [], "{$a$}", "{$a$}", s)
 	end
 
 	it "should accept parser option" do
-		ps = MathML::LaTeX::Parser.new
+		ps = Mathemagical::LaTeX::Parser.new
 		ps.macro.parse('\newcommand{\test}{t}')
-		s = MathML::Util::SimpleLaTeX.new(:parser=>ps)
+		s = Mathemagical::Util::SimpleLaTeX.new(:parser=>ps)
 		assert_data('$\test$', ["<mi>t</mi>"], ['$\test$'], [], [], [], [], "\001m0\001",
 			"<math display='inline' xmlns='http://www.w3.org/1998/Math/MathML'><mi>t</mi></math>", s)
 	end
 
 	it "should accept escape option" do
-		s = MathML::Util::SimpleLaTeX.new(:escape_list=>[/\/(.)/, /(\^.)/])
+		s = Mathemagical::Util::SimpleLaTeX.new(:escape_list=>[/\/(.)/, /(\^.)/])
 		assert_data('\$a$', ["<mi>a</mi>"], ['$a$'], [], [], [], [], "\\\001m0\001",
 			"\\<math display='inline' xmlns='http://www.w3.org/1998/Math/MathML'><mi>a</mi></math>", s)
 		assert_data(%[/$a/$], [], [], [], [], [%[$], %[$]], [%[/$], %[/$]], "\001e0\001a\001e1\001", "$a$", s)
 		assert_data('^\(a^\)', [], [], [], [], ['^\\', '^\\'], ['^\\', '^\\'], "\001e0\001(a\001e1\001)", '^\(a^\)', s)
 
-		s = MathML::Util::SimpleLaTeX.new(:escape_list=>/_(.)/)
+		s = Mathemagical::Util::SimpleLaTeX.new(:escape_list=>/_(.)/)
 		assert_data("_$a$", [], [], [], [], ['$'], ["_$"], %[\001e0\001a$], '$a$', s)
 	end
 
 	it "should accept delimiter option" do
-		s = MathML::Util::SimpleLaTeX.new(:delimiter=>"\002\003")
+		s = Mathemagical::Util::SimpleLaTeX.new(:delimiter=>"\002\003")
 		assert_data("a$b$c", ["<mi>b</mi>"], ["$b$"], [], [], [], [], "a\002\003m0\002\003c",
 			"a<math display='inline' xmlns='http://www.w3.org/1998/Math/MathML'><mi>b</mi></math>c", s)
 
-		s = MathML::Util::SimpleLaTeX.new(:delimiter=>%[$])
+		s = Mathemagical::Util::SimpleLaTeX.new(:delimiter=>%[$])
 		assert_data("a$b$c", ["<mi>b</mi>"], ["$b$"], [], [], [], [], "a$m0$c",
 			"a<math display='inline' xmlns='http://www.w3.org/1998/Math/MathML'><mi>b</mi></math>c", s)
 	end
 
 	it "should accept (d)math_env_list option" do
-		s = MathML::Util::SimpleLaTeX.new(:math_env_list=>/%(.*?)%/, :dmath_env_list=>/\[(.*?)\]/)
+		s = Mathemagical::Util::SimpleLaTeX.new(:math_env_list=>/%(.*?)%/, :dmath_env_list=>/\[(.*?)\]/)
 		assert_data("a$b$c%d%e[f]", ["<mi>d</mi>"], ["%d%"], ["<mi>f</mi>"], ["[f]"], [], [],
 			"a$b$c\001m0\001e\001d0\001",
 			"a$b$c<math display='inline' xmlns='http://www.w3.org/1998/Math/MathML'><mi>d</mi></math>e<math display='block' xmlns='http://www.w3.org/1998/Math/MathML'><mi>f</mi></math>", s)
 
-		s = MathML::Util::SimpleLaTeX.new(:math_env_list=>[/!(.*?)!/, /"(.*)"/], :dmath_env_list=>[/\#(.*)\#/, /&(.*)&/])
+		s = Mathemagical::Util::SimpleLaTeX.new(:math_env_list=>[/!(.*?)!/, /"(.*)"/], :dmath_env_list=>[/\#(.*)\#/, /&(.*)&/])
 		assert_data('a!b!c"d"e#f#g&h&i',
 			["<mi>b</mi>", "<mi>d</mi>"], ['!b!', '"d"'],
 			["<mi>f</mi>", "<mi>h</mi>"], ['#f#', '&h&'],
@@ -229,21 +229,21 @@ describe MathML::Util::SimpleLaTeX do
 	end
 
 	it "should accept throu_list option" do
-		s = MathML::Util::SimpleLaTeX.new(:through_list=>[/<%=.*?%>/m, /\(\(.*?\)\)/m])
+		s = Mathemagical::Util::SimpleLaTeX.new(:through_list=>[/<%=.*?%>/m, /\(\(.*?\)\)/m])
 		assert_data("<%=$a$%>(($b$))", [], [], [], [], [], [], "<%=$a$%>(($b$))", "<%=$a$%>(($b$))", s)
 
-		s = MathML::Util::SimpleLaTeX.new(:through_list=>/<%=.*?%>/)
+		s = Mathemagical::Util::SimpleLaTeX.new(:through_list=>/<%=.*?%>/)
 		assert_data("<%=$a$%>", [], [], [], [], [], [], "<%=$a$%>", "<%=$a$%>", s)
 	end
 
 	it "should accept through_list=>[]" do
-		s = MathML::Util::SimpleLaTeX.new(:through_list=>[])
+		s = Mathemagical::Util::SimpleLaTeX.new(:through_list=>[])
 		assert_data("$a$", ["<mi>a</mi>"], [%[$a$]], [], [], [], [], "\001m0\001",
 			"<math display='inline' xmlns='http://www.w3.org/1998/Math/MathML'><mi>a</mi></math>", s)
 	end
 
 	it "should accept without_parse option" do
-		s = MathML::Util::SimpleLaTeX.new(:without_parse=>true)
+		s = Mathemagical::Util::SimpleLaTeX.new(:without_parse=>true)
 		encoded, data = s.encode("$a$ $$b$$")
 		data.math_list.should == []
 		data.msrc_list.should == ["$a$"]
@@ -260,7 +260,7 @@ describe MathML::Util::SimpleLaTeX do
 	end
 
 	it "#set_encode_proc" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		s.set_encode_proc(/\{\{/) do |scanner|
 			if scanner.scan(/\{\{(.*?)\}\}/m)
 				"<%=#{scanner[1]}%>"
@@ -282,7 +282,7 @@ describe MathML::Util::SimpleLaTeX do
 	end
 
 	it "#set_encode_proc with arrayed regexp" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		src = "{{a}}((b)){{(("
 		encoded, data = s.encode(src, /\{\{/, /\(\(/) do |scanner|
 			case
@@ -309,7 +309,7 @@ describe MathML::Util::SimpleLaTeX do
 	end
 
 	it "#encode accept block" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		src = "{{$a$}}{{$$b$$}}{{"
 		encoded, data = s.encode(src, /\{\{/) do |scanner|
 			if scanner.scan(/\{\{(.*?)\}\}/m)
@@ -324,7 +324,7 @@ describe MathML::Util::SimpleLaTeX do
 	end
 
 	it "#encode should accept block with #set_encode_proc" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		src = "{{$a$}}{{$$b$$}}{{"
 		s.set_encode_proc(/\{\{/) do |scanner|
 			if scanner.scan(/\{\{(.*?)\}\}/m)
@@ -345,18 +345,18 @@ describe MathML::Util::SimpleLaTeX do
 
 	it "#unencode" do
 		src = "$\na\n$\n$$\nb\n$$"
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		encoded, data = s.encode(src)
 		s.unencode(encoded, data).should == "$<br />\na<br />\n$\n$$<br />\nb<br />\n$$"
 
-		s = MathML::Util::SimpleLaTeX.new(:delimiter=>%[$])
+		s = Mathemagical::Util::SimpleLaTeX.new(:delimiter=>%[$])
 		e, d = s.encode("$a$")
 		s.unencode(e, d).should == "$a$"
 	end
 
 	it "#set_rescue_proc" do
 		src = '$a\test$ $$b\dummy$$'
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		encoded, data = s.encode(src)
 		data.math_list[0].should == "<br />\nUndefined command.<br />\n<code>a<strong>\\test</strong></code><br />"
 		data.dmath_list[0].should == "<br />\nUndefined command.<br />\n<code>b<strong>\\dummy</strong></code><br />"
@@ -365,14 +365,14 @@ describe MathML::Util::SimpleLaTeX do
 			e
 		end
 		encoded, data = s.encode(src)
-		data.math_list[0].should be_kind_of(MathML::LaTeX::ParseError)
+		data.math_list[0].should be_kind_of(Mathemagical::LaTeX::ParseError)
 		data.math_list[0].done.should == "a"
-		data.dmath_list[0].should be_kind_of(MathML::LaTeX::ParseError)
+		data.dmath_list[0].should be_kind_of(Mathemagical::LaTeX::ParseError)
 		data.dmath_list[0].done.should == "b"
 	end
 
 	it "#decode with block" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		encoded, data = s.encode('$a$$b$$$c$$$$d$$\e\\\\')
 		r = s.decode(encoded, data) do |item, opt|
 			case opt[:type]
@@ -418,7 +418,7 @@ describe MathML::Util::SimpleLaTeX do
 	end
 
 	it "#set_decode_proc" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		src = '$a$$b$$$c$$$$d$$\e\\\\'
 		encoded, data = s.encode(src)
 		original_decoded = s.decode(encoded, data)
@@ -444,7 +444,7 @@ describe MathML::Util::SimpleLaTeX do
 	end
 
 	it "#unencode with block" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		src = '$a$$b$$$c$$$$d$$\e\\\\'
 		encoded, data = s.encode(src)
 		r = s.unencode(encoded, data) do |item, opt|
@@ -471,7 +471,7 @@ describe MathML::Util::SimpleLaTeX do
 	end
 
 	it "#set_unencode_proc" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		src = '$a$$b$$$c$$$$d$$\e\\\\'
 		encoded, data = s.encode(src)
 		original_unencoded = s.unencode(encoded, data)
@@ -502,7 +502,7 @@ describe MathML::Util::SimpleLaTeX do
 	end
 
 	it "#reset_unencode_proc" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		s.set_unencode_proc do |item, opt|
 			"dummy"
 		end
@@ -514,7 +514,7 @@ describe MathML::Util::SimpleLaTeX do
 	end
 
 	it "#unencode without escaping" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		src = %[$<>&'"\n$ $$<>&"'\n$$]
 		encoded, data = s.encode(src)
 		s.unencode(encoded, data).should == "$&lt;&gt;&amp;&apos;&quot;<br />\n$ $$&lt;&gt;&amp;&quot;&apos;<br />\n$$"
@@ -522,7 +522,7 @@ describe MathML::Util::SimpleLaTeX do
 	end
 
 	it "#decode without parsed" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		src = '$a$$$b$$\a'
 		encoded, data = s.encode(src)
 		s.decode(encoded, data, true).should == "$a$$$b$$a"
@@ -542,7 +542,7 @@ describe MathML::Util::SimpleLaTeX do
 	end
 
 	it "#decode_partial" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		encoded, data = s.encode("$a$$b$")
 		simplify_math(s.decode_partial(:math, encoded, data)).should == simplify_math("<math display='inline' xmlns='http://www.w3.org/1998/Math/MathML'><mi>a</mi></math><math display='inline' xmlns='http://www.w3.org/1998/Math/MathML'><mi>b</mi></math>")
 
@@ -590,20 +590,20 @@ describe MathML::Util::SimpleLaTeX do
 		end
 		r.should == "\001m0\001\001d0\001\001e0\001$d$"
 
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		encoded, data = s.encode("\\a")
 		s.decode_partial(:escape, encoded, data).should == "a"
 		r = s.decode_partial(:escape, encoded, data) do |item, opt|
 		end
 		r.should == "\001e0\001"
 
-		s = MathML::Util::SimpleLaTeX.new(:delimiter=>%[$])
+		s = Mathemagical::Util::SimpleLaTeX.new(:delimiter=>%[$])
 		encoded, data = s.encode("$a$")
 		s.decode_partial(:math, encoded, data).should =~ /^<math.*<\/math>/m
 	end
 
 	it "should keep regexp order" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		s.set_encode_proc(/\$/) do |sc|
 			if sc.scan(/\$(.*)\z/)
 				sc[1]+"is rest"
@@ -615,7 +615,7 @@ describe MathML::Util::SimpleLaTeX do
 	end
 
 	it "parse eqnarray" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		src = <<'EOT'
 test
 \begin
@@ -626,48 +626,48 @@ c&=&d
 {eqnarray}
 end
 EOT
-		encoded, data = s.encode(src, MathML::Util::EQNARRAY_RE) do |scanner|
-			if scanner.scan(MathML::Util::EQNARRAY_RE)
+		encoded, data = s.encode(src, Mathemagical::Util::EQNARRAY_RE) do |scanner|
+			if scanner.scan(Mathemagical::Util::EQNARRAY_RE)
 				s.parse_eqnarray(scanner[1])
 			end
 		end
 		encoded.should == "test\n\001u0\001\nend\n"
 		simplify_math(s.decode(encoded, data)).should == simplify_math("test\n<math display='block' xmlns='http://www.w3.org/1998/Math/MathML'><mtable><mtr><mtd><mi>a</mi></mtd><mtd><mo stretchy='false'>=</mo></mtd><mtd><mi>b</mi></mtd></mtr><mtr><mtd><mi>c</mi></mtd><mtd><mo stretchy='false'>=</mo></mtd><mtd><mi>d</mi></mtd></mtr></mtable></math>\nend\n")
 
-		encoded, data = s.encode('\begin{eqnarray}a\end{eqnarray}', MathML::Util::EQNARRAY_RE) do |scanner|
-			s.parse_eqnarray(scanner[1]) if scanner.scan(MathML::Util::EQNARRAY_RE)
+		encoded, data = s.encode('\begin{eqnarray}a\end{eqnarray}', Mathemagical::Util::EQNARRAY_RE) do |scanner|
+			s.parse_eqnarray(scanner[1]) if scanner.scan(Mathemagical::Util::EQNARRAY_RE)
 		end
 		s.decode(encoded, data).should == "<br />\nNeed more column.<br />\n<code>\\begin{eqnarray}a<strong>\\end{eqnarray}</strong></code><br />"
 	end
 
 	# TODO COME BACK AND FIX THIS TEST
 	# it "should parse single command" do
-	# 	s = MathML::Util::SimpleLaTeX.new
-	# 	encoded, data = s.encode(%q[\alpha\|\<\>\&\"\'\test], MathML::Util::SINGLE_COMMAND_RE) do |scanner|
-	# 		if scanner.scan(MathML::Util::SINGLE_COMMAND_RE)
+	# 	s = Mathemagical::Util::SimpleLaTeX.new
+	# 	encoded, data = s.encode(%q[\alpha\|\<\>\&\"\'\test], Mathemagical::Util::SINGLE_COMMAND_RE) do |scanner|
+	# 		if scanner.scan(Mathemagical::Util::SINGLE_COMMAND_RE)
 	# 			s.parse_single_command(scanner.matched)
 	# 		end
 	# 	end
 	# 	encoded.should == "\001u0\001\001e0\001\001e1\001\001e2\001\001e3\001\001e4\001\001e5\001\001u1\001"
 	# 	simplify_math(s.decode(encoded, data)).should == simplify_math("<math display='inline' xmlns='http://www.w3.org/1998/Math/MathML'><mi>&alpha;</mi></math>|&lt;&gt;&amp;&quot;&apos;test")
-	# 	encoded, data = s.encode('\alpha test', MathML::Util::SINGLE_COMMAND_RE) do |scanner|
-	# 		if scanner.scan(MathML::Util::SINGLE_COMMAND_RE)
+	# 	encoded, data = s.encode('\alpha test', Mathemagical::Util::SINGLE_COMMAND_RE) do |scanner|
+	# 		if scanner.scan(Mathemagical::Util::SINGLE_COMMAND_RE)
 	# 			s.parse_single_command(scanner.matched)
 	# 		end
 	# 	end
 	# 	encoded.should == "\001u0\001test"
 	# 	simplify_math(s.decode(encoded, data)).should == simplify_math("<math display='inline' xmlns='http://www.w3.org/1998/Math/MathML'><mi>&alpha;</mi></math>test")
 
-	# 	encoded, data = s.encode('\alpha  test', MathML::Util::SINGLE_COMMAND_RE) do |scanner|
-	# 		if scanner.scan(MathML::Util::SINGLE_COMMAND_RE)
+	# 	encoded, data = s.encode('\alpha  test', Mathemagical::Util::SINGLE_COMMAND_RE) do |scanner|
+	# 		if scanner.scan(Mathemagical::Util::SINGLE_COMMAND_RE)
 	# 			s.parse_single_command(scanner.matched)
 	# 		end
 	# 	end
 	# 	encoded.should == "\001u0\001 test"
 	# 	simplify_math(s.decode(encoded, data)).should == simplify_math("<math display='inline' xmlns='http://www.w3.org/1998/Math/MathML'><mi>&alpha;</mi></math> test")
 
-	# 	encoded, data = s.encode("\\alpha\ntest", MathML::Util::SINGLE_COMMAND_RE) do |scanner|
-	# 		if scanner.scan(MathML::Util::SINGLE_COMMAND_RE)
+	# 	encoded, data = s.encode("\\alpha\ntest", Mathemagical::Util::SINGLE_COMMAND_RE) do |scanner|
+	# 		if scanner.scan(Mathemagical::Util::SINGLE_COMMAND_RE)
 	# 			s.parse_single_command(scanner.matched)
 	# 		end
 	# 	end
@@ -675,13 +675,12 @@ EOT
 	# end
 
 	it "#encode can be called twice or more times" do
-		s = MathML::Util::SimpleLaTeX.new
+		s = Mathemagical::Util::SimpleLaTeX.new
 		encoded, data = s.encode('$a$')
 		encoded, data = s.encode('$b$', data)
 		encoded.should == "\001m1\001"
 		data.msrc_list.should == ["$a$", '$b$']
 		data.math_list.size.should == 2
-		puts data.math_list[0].children[0]
 		strip_math(data.math_list[0].to_s).should == "<mi>a</mi>"
 		strip_math(data.math_list[1].to_s).should == "<mi>b</mi>"
 

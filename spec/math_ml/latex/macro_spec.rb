@@ -1,8 +1,8 @@
-require "math_ml"
+require "mathemagical"
 require "spec/util"
 
-describe MathML::LaTeX::Macro do
-	include MathML::Spec::Util
+describe Mathemagical::LaTeX::Macro do
+	include Mathemagical::Spec::Util
 
 	before(:all) do
 		@src = <<'EOT'
@@ -20,15 +20,15 @@ EOT
 	end
 
 	before do
-		@m = MathML::LaTeX::Macro.new
+		@m = Mathemagical::LaTeX::Macro.new
 		@m.parse(@src)
 	end
 
 	it "#parse" do
-		@m = MathML::LaTeX::Macro.new
+		@m = Mathemagical::LaTeX::Macro.new
 		lambda{@m.parse(@src)}.should_not raise_error
 
-		@m = MathML::LaTeX::Macro.new
+		@m = Mathemagical::LaTeX::Macro.new
 		lambda{@m.parse('\newcommand{notcommand}{}')}.should raise_parse_error("Need newcommand.", '\\newcommand{', "notcommand}{}")
 		lambda{@m.parse('\newcommand{\separated command}{}')}.should raise_parse_error("Syntax error.", '\newcommand{\separated', " command}{}")
 		lambda{@m.parse('\newcommand{\nobody}')}.should raise_parse_error("Need parameter.", '\newcommand{\nobody}', "")
@@ -104,7 +104,7 @@ EOT
 \newenvironment{optenv}[2][]{s:#1}{e:#2}
 EOT
 
-		m = MathML::LaTeX::Macro.new
+		m = Mathemagical::LaTeX::Macro.new
 		m.parse(src)
 
 		m.expand_command("opt", []).should == 'x'

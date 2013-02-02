@@ -1,5 +1,6 @@
 require "rspec"
-module MathML
+
+module Mathemagical
 	module Spec
 		module Util
 			def raise_parse_error(message, done, rest)
@@ -16,14 +17,14 @@ module MathML
 						rescue Exception
 							@error = $!
 						end
-						@error.is_a?(MathML::LaTeX::ParseError) &&
+						@error.is_a?(Mathemagical::LaTeX::ParseError) &&
 							[@error.message, @error.done, @error.rest] == [message, done, rest]
 					end
 				}.for_expected
 			end
 
 			def new_parser
-				MathML::LaTeX::Parser.new
+				Mathemagical::LaTeX::Parser.new
 			end
 
 			def math_ml(src, display_style=false, parser=nil)
