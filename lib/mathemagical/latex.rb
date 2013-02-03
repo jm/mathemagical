@@ -594,7 +594,7 @@ EOS
 			def parse_symbol_command(com, plain=false)
 				unless @symbols.include?(com)
 					@scanner.pos = @scanner.pos-(com.size+1)
-					raise ParseError.new("Undefined command.")
+					raise ParseError.new("Undefined command: #{com}")
 				end
 				data = @symbols[com]
 				return nil unless data
