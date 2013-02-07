@@ -906,7 +906,8 @@ EOS
 				raise ParseError.new("Undefined environment.") unless @environments.has_key?(en)
 				e = @environments[en]
 				e = en unless e # default method name
-				__send__("env_#{e.to_s}")
+
+				__send__("env_#{e.to_s}") unless e == "equation"
 			end
 
 			def grp_left_etc

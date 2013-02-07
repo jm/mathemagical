@@ -62,7 +62,7 @@ describe Mathemagical::LaTeX::Parser do
 
 		it "should raise error when error happened" do
 			src = 'a\hoge c'
-			lambda{smml(src)}.should raise_parse_error("Undefined command.", "a", '\hoge c')
+			lambda{smml(src)}.should raise_parse_error("Undefined command: hoge", "a", '\hoge c')
 
 			src = '\sqrt\sqrt1'
 			lambda{smml(src)}.should raise_parse_error("Syntax error.", '\sqrt\sqrt', "1")
@@ -430,11 +430,11 @@ EOT
 			ps = new_parser
 			ps.macro.parse(macro)
 
-			lambda{smml('\C', false, ps)}.should raise_parse_error('Error in macro(Undefined command. "\dummy").', "", '\C')
-			lambda{smml('\C', false, ps)}.should raise_parse_error('Error in macro(Undefined command. "\dummy").', "", '\C')
+			lambda{smml('\C', false, ps)}.should raise_parse_error('Error in macro(Undefined command: dummy "\dummy").', "", '\C')
+			lambda{smml('\C', false, ps)}.should raise_parse_error('Error in macro(Undefined command: dummy "\dummy").', "", '\C')
 
-			lambda{smml('\begin{E}\end{E}', false, ps)}.should raise_parse_error('Error in macro(Undefined command. "\dummy").', '', '\begin{E}\end{E}')
-			lambda{smml('\begin{E}\end{E}', false, ps)}.should raise_parse_error('Error in macro(Undefined command. "\dummy").', "", '\begin{E}\end{E}')
+			lambda{smml('\begin{E}\end{E}', false, ps)}.should raise_parse_error('Error in macro(Undefined command: dummy "\dummy").', '', '\begin{E}\end{E}')
+			lambda{smml('\begin{E}\end{E}', false, ps)}.should raise_parse_error('Error in macro(Undefined command: dummy "\dummy").', "", '\begin{E}\end{E}')
 		end
 
 		it "can be used with macro with option" do

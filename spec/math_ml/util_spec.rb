@@ -358,8 +358,8 @@ describe Mathemagical::Util::SimpleLaTeX do
 		src = '$a\test$ $$b\dummy$$'
 		s = Mathemagical::Util::SimpleLaTeX.new
 		encoded, data = s.encode(src)
-		data.math_list[0].should == "<br />\nUndefined command.<br />\n<code>a<strong>\\test</strong></code><br />"
-		data.dmath_list[0].should == "<br />\nUndefined command.<br />\n<code>b<strong>\\dummy</strong></code><br />"
+		data.math_list[0].should == "<br />\nUndefined command: test<br />\n<code>a<strong>\\test</strong></code><br />"
+		data.dmath_list[0].should == "<br />\nUndefined command: dummy<br />\n<code>b<strong>\\dummy</strong></code><br />"
 
 		s.set_rescue_proc do |e|
 			e
