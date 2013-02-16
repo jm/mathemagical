@@ -388,8 +388,9 @@ EOS
 
 			def parse(src, displaystyle=false)
 				@ds = displaystyle
+				@math = Math.new(@ds)
 				begin
-					parse_into(src, Math.new(@ds), Font::NORMAL)
+					parse_into(src, @math, Font::NORMAL)
 				rescue ParseError => e
 					e.done = src[0...(src.size - e.rest.size)]
 					raise
@@ -907,7 +908,7 @@ EOS
 				e = @environments[en]
 				e = en unless e # default method name
 
-				__send__("env_#{e.to_s}") unless e == "equation"
+				__send__("env_#{e.to_s}")
 			end
 
 			def grp_left_etc
@@ -943,9 +944,24 @@ EOS
 
 		module BuiltinEnvironments
 			def initialize
-				add_environment("array", "matrix")
+				add_environment("array", "matrix", "equation")
 
 				super
+			end
+
+			def env_equation
+				until @scanner.peek_command=="end"
+					raise ParseError.new('Matching \end not exist.') if @scanner.eos?
+
+					push_container(@math) do |e|
+						e << parse_to_element(true) until @scanner.peek_command=="end" || @scanner.eos?
+					end
+				end
+
+				raise ParseError.new("Need \\end{equation}.") unless @scanner.peek_command=="end"
+				@scanner.scan_command
+				raise ParseError.new("Environment mismatched.") unless @scanner.check_block && @scanner[1]=="equation"
+				@scanner.scan_block
 			end
 
 			def env_array
