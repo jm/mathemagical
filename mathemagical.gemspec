@@ -13,8 +13,8 @@ Gem::Specification.new do |s|
   ## If your rubyforge_project name is different, then edit it and comment out
   ## the sub! line in the Rakefile
   s.name              = 'mathemagical'
-  s.version           = '0.0.1'
-  s.date              = '2012-02-01'
+  s.version           = '0.0.2'
+  s.date              = '2013-02-16'
   s.rubyforge_project = 'mathemagical'
 
   ## Make sure your summary is short. The description may be as long
@@ -39,7 +39,7 @@ Gem::Specification.new do |s|
   ## Specify any RDoc options here. You'll want to add your README and
   ## LICENSE files to the extra_rdoc_files list.
   s.rdoc_options = ["--charset=UTF-8"]
-  s.extra_rdoc_files = %w[README LICENSE]
+  s.extra_rdoc_files = %w[README.md LICENSE]
 
   ## List your runtime dependencies here. Runtime dependencies are those
   ## that are needed for an end user to actually USE your code.
@@ -53,7 +53,31 @@ Gem::Specification.new do |s|
   ## contents of your Git repository via the gemspec task. DO NOT REMOVE
   ## THE MANIFEST COMMENTS, they are used as delimiters by the task.
   # = MANIFEST =
-  s.files = %w[]
+  s.files = %w[
+    LICENSE
+    README.md
+    Rakefile
+    bin/mathemagical
+    lib/mathemagical.rb
+    lib/mathemagical/element.rb
+    lib/mathemagical/latex.rb
+    lib/mathemagical/latex/builtin.rb
+    lib/mathemagical/latex/builtin/symbol.rb
+    lib/mathemagical/string.rb
+    lib/mathemagical/symbol/character_reference.rb
+    lib/mathemagical/symbol/entity_reference.rb
+    lib/mathemagical/symbol/utf8.rb
+    lib/mathemagical/util.rb
+    mathemagical.gemspec
+    spec/math_ml/element_spec.rb
+    spec/math_ml/latex/macro_spec.rb
+    spec/math_ml/latex/parser_spec.rb
+    spec/math_ml/latex/scanner_spec.rb
+    spec/math_ml/string_spec.rb
+    spec/math_ml/util_spec.rb
+    spec/math_ml_spec.rb
+    spec/util.rb
+  ]
   # = MANIFEST =
 
   ## Test files will be grabbed from the file list. Make sure the path glob

@@ -6,4 +6,5 @@ require 'rubygems'
 require 'mathemagical'
 require 'mathemagical/string'
 
-puts STDIN.read.to_mathml
+inline = (ARGV[0] == "block")
+STDOUT.puts STDIN.read.to_mathml(inline)
